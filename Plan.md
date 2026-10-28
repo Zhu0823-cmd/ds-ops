@@ -1173,7 +1173,6 @@ If any condition fails, stop plugin packaging and retain the standalone MCP setu
 
 **Files:**
 - Create: `codex-mcp/.agents/plugins/marketplace.json`
-- Create: `codex-mcp/.mcp.json`
 - Create: `codex-mcp/.codex-plugin/plugin.json`
 - Create: `codex-mcp/bin/install-local.ps1`
 
@@ -1204,23 +1203,13 @@ If any condition fails, stop plugin packaging and retain the standalone MCP setu
 }
 ```
 
-- [ ] **Step 2: Add the MCP declaration**
+- [ ] **Step 2: Resolve the MCP declaration**
 
-`codex-mcp/.mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "dsh_ops_codex": {
-      "type": "stdio",
-      "command": "node",
-      "args": ["./bin/launcher.mjs"]
-    }
-  }
-}
-```
-
-Before committing this file, verify that Codex resolves `./bin/launcher.mjs` relative to the plugin root. If it does not, `install-local.ps1` must write an absolute-path entry in the user's Codex config and the plugin must omit `mcpServers`. Do not rely on environment-variable placeholders.
+Do not commit a relative plugin `.mcp.json`. Verify it against the current
+Codex client before use. If Codex does not resolve `./bin/launcher.mjs` relative
+to the plugin root, `install-local.ps1` writes an absolute-path entry in the
+user's Codex config and the plugin omits `mcpServers`. Do not rely on
+environment-variable placeholders.
 
 > **Implementation note (2026-10-28):** Codex 0.164.0 installed the plugin
 > metadata but did not resolve `./bin/launcher.mjs` from the plugin's
@@ -1306,7 +1295,7 @@ Expected:
 - [ ] **Step 6: Commit**
 
 ```powershell
-git add codex-mcp/.agents/plugins/marketplace.json codex-mcp/.mcp.json codex-mcp/.codex-plugin/plugin.json codex-mcp/bin/install-local.ps1
+git add codex-mcp/.agents/plugins/marketplace.json codex-mcp/.codex-plugin/plugin.json codex-mcp/bin/install-local.ps1 Plan.md
 git commit -m "feat: package codex read-only mcp plugin"
 ```
 
@@ -1319,7 +1308,7 @@ git commit -m "feat: package codex read-only mcp plugin"
 - [ ] **Step 1: Run all automated checks**
 
 ```powershell
-cargo test --manifest-path native/Cargo.toml
+cargo test --workspace --manifest-path native/Cargo.toml
 $env:DSH_OPS_WORKER_PATH = (Resolve-Path native\target\release\dsh-ops-worker.exe).Path
 npm test --prefix codex-mcp
 npm run build --prefix codex-mcp

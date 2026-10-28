@@ -103,6 +103,7 @@ npx --yes dsh-ops@latest uninstall --profile desktop
 
 ## 文档
 
+- [Codex Desktop 只读 MCP 适配器](codex-mcp/README.md)
 - [第三方预设集成接口](docs/集成接口.md) · [外部 Native 提供者](docs/外部工具提供者.md) · [作用域诊断](docs/集成诊断.md)
 
 - [使用指南](docs/使用指南.md) · [常见问题](docs/常见问题.md) · [组件参考](docs/组件参考.md) · [配置参考](docs/配置参考.md)
