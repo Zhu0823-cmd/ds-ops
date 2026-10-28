@@ -21,6 +21,8 @@ export const searchInput = z
     pattern: z.string().min(1).max(4096),
     path: z.string().min(1).max(4096).default("."),
     maxResults: z.number().int().min(1).max(200).default(50),
+    offset: z.number().int().min(0).max(1_000_000).default(0),
+    continuation: z.string().min(1).max(8192).optional(),
     maxBytes: z.number().int().min(1024).max(65536).default(32768)
   })
   .strict();

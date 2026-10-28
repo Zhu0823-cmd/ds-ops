@@ -36,3 +36,14 @@ test("rejects unbounded search and reference inputs", () => {
     resultInput.parse({ ref: `opsref://session/${"x".repeat(201)}` })
   );
 });
+
+test("accepts a bounded search continuation", () => {
+  const input = searchInput.parse({
+    mode: "files",
+    pattern: "*.ts",
+    offset: 50,
+    continuation: "signed-cursor"
+  });
+  assert.equal(input.offset, 50);
+  assert.equal(input.continuation, "signed-cursor");
+});

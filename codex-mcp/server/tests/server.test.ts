@@ -89,13 +89,31 @@ test("serves the bounded read-only MCP contract", async (t) => {
       arguments: {
         mode: "files",
         pattern: "*.txt",
-        maxResults: 10,
+        maxResults: 1,
         maxBytes: 4096
       }
     })
   );
   assert.equal(found.status, "completed");
   assert.ok(Array.isArray(found.items));
+  assert.equal(found.items.length, 1);
+  assert.equal(typeof found.continuation, "string");
+
+  const nextSearch = textResult(
+    await client.callTool({
+      name: "ops_search",
+      arguments: {
+        mode: "files",
+        pattern: "*.txt",
+        maxResults: 1,
+        offset: found.nextOffset,
+        continuation: found.continuation,
+        maxBytes: 4096
+      }
+    })
+  );
+  assert.ok(Array.isArray(nextSearch.items));
+  assert.equal(nextSearch.items.length, 1);
 
   const large = textResult(
     await client.callTool({

@@ -43,6 +43,8 @@ export class WorkerClient {
     pattern: string;
     path: string;
     maxResults: number;
+    offset?: number;
+    continuation?: string;
   }): Promise<WorkerResult> {
     const policy = await this.policyPromise;
     const root = await policy.resolveDirectory(input.path);
@@ -51,8 +53,9 @@ export class WorkerClient {
         path: root,
         pattern: [input.pattern],
         outputMode: "paths",
-        offset: 0,
-        limit: input.maxResults
+        offset: input.offset ?? 0,
+        limit: input.maxResults,
+        continuation: input.continuation
       });
     }
     return await this.invoke("grep", {
@@ -61,8 +64,9 @@ export class WorkerClient {
       glob: [],
       outputMode: "content",
       lineNumbers: true,
-      offset: 0,
-      limit: input.maxResults
+      offset: input.offset ?? 0,
+      limit: input.maxResults,
+      continuation: input.continuation
     });
   }
 

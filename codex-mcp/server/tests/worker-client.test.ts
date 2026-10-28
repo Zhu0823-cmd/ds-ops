@@ -38,4 +38,25 @@ test("invokes the native worker and parses JSON", async () => {
   });
   assert.equal(found.status, "completed");
   assert.equal(found.items.length, 2);
+
+  const firstPage = await client.search({
+    mode: "files",
+    pattern: "*.txt",
+    path: ".",
+    maxResults: 1
+  });
+  assert.equal(firstPage.items.length, 1);
+  assert.equal(firstPage.nextOffset, 1);
+  assert.equal(typeof firstPage.continuation, "string");
+
+  const secondPage = await client.search({
+    mode: "files",
+    pattern: "*.txt",
+    path: ".",
+    maxResults: 1,
+    offset: 1,
+    continuation: firstPage.continuation as string
+  });
+  assert.equal(secondPage.items.length, 1);
+  assert.notDeepEqual(secondPage.items, firstPage.items);
 });
