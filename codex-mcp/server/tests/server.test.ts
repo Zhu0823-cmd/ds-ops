@@ -34,7 +34,12 @@ test("serves the bounded read-only MCP contract", async (t) => {
   const workspace = path.join(root, "workspace");
   const configPath = path.join(root, "config.json");
   await mkdir(workspace);
+  await mkdir(path.join(workspace, ".tmp-credentials"));
   await writeFile(path.join(workspace, "alpha.txt"), "alpha\n");
+  await writeFile(
+    path.join(workspace, ".tmp-credentials", ".env"),
+    "SENTINEL_SECRET=must-not-return\n"
+  );
   await writeFile(
     path.join(workspace, "large.txt"),
     Array.from({ length: 120 }, (_, index) => `line ${index}: ${"x".repeat(80)}`).join("\n")
@@ -114,6 +119,29 @@ test("serves the bounded read-only MCP contract", async (t) => {
   );
   assert.ok(Array.isArray(nextSearch.items));
   assert.equal(nextSearch.items.length, 1);
+
+  const deniedCredential = await client.callTool({
+    name: "ops_read_files",
+    arguments: {
+      files: [{ path: ".tmp-credentials/.env" }],
+      maxBytes: 1024
+    }
+  });
+  assert.equal(deniedCredential.isError, true);
+  assert.ok(
+    deniedCredential.content.every(
+      (item) => item.type !== "text" || !item.text.includes("SENTINEL_SECRET")
+    )
+  );
+
+  const deniedEscape = await client.callTool({
+    name: "ops_read_files",
+    arguments: {
+      files: [{ path: "../outside-secret.txt" }],
+      maxBytes: 1024
+    }
+  });
+  assert.equal(deniedEscape.isError, true);
 
   const large = textResult(
     await client.callTool({
