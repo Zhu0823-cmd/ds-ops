@@ -46,6 +46,26 @@ test("chunks one oversized item without exceeding the byte budget", () => {
   assert.ok(second.chunk);
 });
 
+test("keeps the complete serialized page within maxBytes", () => {
+  const store = new ResultStore("session-a", 60_000);
+  const ref = store.put({
+    items: Array.from({ length: 20 }, () => ({
+      text: "\"中\\".repeat(80)
+    }))
+  });
+  for (let offset = 0, charOffset = 0, attempts = 0; offset < 20; attempts++) {
+    assert.ok(attempts < 1000, `pagination stalled at offset ${offset}`);
+    const page = store.page(ref, offset, 20, 1024, charOffset);
+    assert.ok(Buffer.byteLength(JSON.stringify(page)) <= 1024);
+    if (typeof page.nextCharOffset === "number") {
+      charOffset = page.nextCharOffset;
+    } else {
+      offset = page.nextOffset ?? 20;
+      charOffset = 0;
+    }
+  }
+});
+
 test("expires references", async () => {
   const store = new ResultStore("session-a", 1);
   const ref = store.put({ value: 1 });

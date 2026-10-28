@@ -1,4 +1,4 @@
-import { realpath, stat } from "node:fs/promises";
+import { lstat, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 
 const CREDENTIAL_NAMES = new Set([
@@ -46,7 +46,21 @@ export async function createPathPolicy(workspace: string) {
     if (!inside(root, resolvedParent)) {
       throw new Error("resolved parent escapes the workspace or crosses a link");
     }
-    return path.join(resolvedParent, path.basename(candidate));
+    const withResolvedParent = path.join(resolvedParent, path.basename(candidate));
+    const metadata = await lstat(withResolvedParent).catch((error: NodeJS.ErrnoException) => {
+      if (error.code === "ENOENT") return null;
+      throw error;
+    });
+    if (metadata?.isSymbolicLink()) {
+      throw new Error("links and reparse points are not readable");
+    }
+    if (!metadata) return withResolvedParent;
+
+    const resolved = await realpath(withResolvedParent);
+    if (!inside(root, resolved) || isCredential(path.relative(root, resolved))) {
+      throw new Error("resolved file escapes the workspace or is a credential");
+    }
+    return resolved;
   }
 
   async function resolveDirectory(input: string): Promise<string> {

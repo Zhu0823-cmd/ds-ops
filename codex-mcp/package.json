@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "dsh-ops-codex": "./bin/launcher.mjs"
+  },
   "engines": {
     "node": ">=22.19"
   },

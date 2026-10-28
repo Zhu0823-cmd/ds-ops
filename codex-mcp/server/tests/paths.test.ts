@@ -42,3 +42,20 @@ test("rejects a symlink that escapes the workspace", async () => {
   const policy = await createPathPolicy(root);
   await assert.rejects(() => policy.resolveRead("links\\escape\\secret.txt"), /workspace|link/i);
 });
+
+test("rejects a file symlink that escapes the workspace", async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), "ops-policy-"));
+  const outside = await mkdtemp(path.join(tmpdir(), "ops-outside-"));
+  await writeFile(path.join(outside, "secret.txt"), "outside");
+  try {
+    await symlink(path.join(outside, "secret.txt"), path.join(root, "secret.txt"), "file");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "EPERM") {
+      t.skip("file symlinks require Windows Developer Mode or elevation");
+      return;
+    }
+    throw error;
+  }
+  const policy = await createPathPolicy(root);
+  await assert.rejects(() => policy.resolveRead("secret.txt"), /workspace|link/i);
+});

@@ -27,3 +27,12 @@ test("accepts a character offset for oversized result chunks", () => {
   });
   assert.equal(input.charOffset, 128);
 });
+
+test("rejects unbounded search and reference inputs", () => {
+  assert.throws(() =>
+    searchInput.parse({ mode: "content", pattern: "x".repeat(4097) })
+  );
+  assert.throws(() =>
+    resultInput.parse({ ref: `opsref://session/${"x".repeat(201)}` })
+  );
+});

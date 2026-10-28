@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 
+const PAGE_RESERVED_BYTES = 256;
+
 type RecordValue = {
   createdAt: number;
   items: unknown[];
@@ -82,19 +84,23 @@ export class ResultStore {
     for (; index < record.items.length && items.length < safeLimit; index++) {
       const item = record.items[index];
       const encoded = Buffer.byteLength(JSON.stringify(item));
-      if (items.length === 0 && encoded > safeBytes) {
-        const text = JSON.stringify(item);
-        const { chunk, nextCharOffset } = sliceByBytes(text, charOffset, safeBytes);
-        return {
-          items: [],
-          chunk,
-          itemIndex: index,
-          nextOffset: nextCharOffset === null ? index + 1 : index,
-          nextCharOffset,
-          total: record.items.length
-        };
+      const budget = safeBytes - PAGE_RESERVED_BYTES;
+      if (items.length === 0 && encoded > budget) {
+        return chunkedItem(record.items, index, charOffset, safeBytes);
       }
-      if (items.length > 0 && bytes + encoded > safeBytes) break;
+      const candidate = [...items, item];
+      const candidatePage = {
+        items: candidate,
+        nextOffset: index + 1 < record.items.length ? index + 1 : null,
+        total: record.items.length
+      };
+      if (Buffer.byteLength(JSON.stringify(candidatePage)) > safeBytes) {
+        if (items.length === 0) {
+          return chunkedItem(record.items, index, charOffset, safeBytes);
+        }
+        break;
+      }
+      if (bytes + encoded > budget) break;
       items.push(item);
       bytes += encoded;
     }
@@ -118,4 +124,45 @@ export class ResultStore {
       if (now - record.createdAt > this.ttlMs) this.delete(ref);
     }
   }
+}
+
+function chunkedItem(
+  items: unknown[],
+  index: number,
+  charOffset: number,
+  maxBytes: number
+) {
+  const text = JSON.stringify(items[index]);
+  const start = Math.max(0, Math.min(charOffset, text.length));
+  const boundaries = [start];
+  let offset = start;
+  for (const character of text.slice(start)) {
+    offset += character.length;
+    boundaries.push(offset);
+  }
+  const responseAt = (end: number) => ({
+    items: [],
+    chunk: text.slice(start, end),
+    itemIndex: index,
+    nextOffset: end === text.length ? index + 1 : index,
+    nextCharOffset: end === text.length ? null : end,
+    total: items.length
+  });
+  let low = 0;
+  let high = boundaries.length - 1;
+  while (low < high) {
+    const middle = Math.ceil((low + high) / 2);
+    if (
+      Buffer.byteLength(JSON.stringify(responseAt(boundaries[middle]))) <= maxBytes
+    ) {
+      low = middle;
+    } else {
+      high = middle - 1;
+    }
+  }
+  const response = responseAt(boundaries[low]);
+  if (Buffer.byteLength(JSON.stringify(response)) > maxBytes) {
+    throw new Error("result page metadata exceeds maxBytes");
+  }
+  return response;
 }
