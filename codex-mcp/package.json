@@ -1,0 +1,24 @@
+{
+  "name": "@dsh-ops/codex-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.19"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "npm run typecheck && esbuild server/src/index.ts --bundle --platform=node --format=esm --target=node22 --outfile=server/dist/index.mjs",
+    "test": "node --test --import tsx server/tests/*.test.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.20.0",
+    "typescript": "^6.0.0"
+  }
+}
