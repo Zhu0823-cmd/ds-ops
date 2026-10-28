@@ -1222,6 +1222,14 @@ If any condition fails, stop plugin packaging and retain the standalone MCP setu
 
 Before committing this file, verify that Codex resolves `./bin/launcher.mjs` relative to the plugin root. If it does not, `install-local.ps1` must write an absolute-path entry in the user's Codex config and the plugin must omit `mcpServers`. Do not rely on environment-variable placeholders.
 
+> **Implementation note (2026-10-28):** Codex 0.164.0 installed the plugin
+> metadata but did not resolve `./bin/launcher.mjs` from the plugin's
+> `.mcp.json`. The verified fallback is in use: the plugin manifest omits
+> `mcpServers`, and `install-local.ps1` registers `dsh_ops_codex` through
+> `codex mcp add` with absolute `node.exe`, launcher, workspace, and worker
+> paths. A fresh plugin session successfully called `ops_read_files` from the
+> installed cache.
+
 - [ ] **Step 3: Add the plugin manifest**
 
 `codex-mcp/.codex-plugin/plugin.json`:

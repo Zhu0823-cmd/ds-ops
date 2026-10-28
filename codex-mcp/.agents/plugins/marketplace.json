@@ -1,0 +1,20 @@
+{
+  "name": "dsh-ops-codex-local",
+  "interface": {
+    "displayName": "DSH Ops Codex Local"
+  },
+  "plugins": [
+    {
+      "name": "dsh-ops-codex",
+      "source": {
+        "source": "local",
+        "path": "."
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "name": "dsh-ops-codex",
+  "version": "0.1.0",
+  "description": "Bounded read-only repository tools adapted from dsh-ops.",
+  "author": {
+    "name": "T-Auto fork contributors"
+  },
+  "license": "MIT",
+  "keywords": [
+    "read-only",
+    "repository",
+    "search",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "DSH Ops Codex",
+    "shortDescription": "Batched file reads and bounded search",
+    "longDescription": "Read multiple file ranges in one call, search repository content with bounded output, and page large results without modifying the workspace.",
+    "developerName": "T-Auto fork contributors",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read"
+    ],
+    "defaultPrompt": [
+      "Use dsh-ops-codex to inspect multiple files with one bounded read."
+    ],
+    "brandColor": "#245BDB",
+    "screenshots": []
+  }
+}
